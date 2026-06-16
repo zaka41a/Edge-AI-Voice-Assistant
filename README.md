@@ -2,202 +2,203 @@
 
 # Edge AI Voice Assistant
 
-### Real-time, voice-controlled AI assistant on the RP2350 LaunchPad
+### A real-time, voice-controlled AI assistant on the RP2350 LaunchPad
 
 A resource-constrained microcontroller as the hardware front-end of a modern AI system:
-the board owns all real-time I/O, the laptop runs the heavy AI, PostgreSQL keeps the memory.
+the board owns all real-time I/O, a laptop bridge runs the heavy AI, and the assistant
+talks back through the board itself.
 
 ![Firmware](https://img.shields.io/badge/Firmware-C%2B%2B%20%2F%20YAHAL-00599C?logo=cplusplus&logoColor=white)
 ![Bridge](https://img.shields.io/badge/Bridge-Python%20%2F%20FastAPI-3776AB?logo=python&logoColor=white)
-![Frontend](https://img.shields.io/badge/Frontend-React%20%2F%20TypeScript-61DAFB?logo=react&logoColor=black)
-![Database](https://img.shields.io/badge/Database-PostgreSQL%2016-4169E1?logo=postgresql&logoColor=white)
-![LLM](https://img.shields.io/badge/LLM-Grok%20%7C%20Ollama-7C3AED)
+![Desktop](https://img.shields.io/badge/App-Native%20(pywebview)-111?logo=apple&logoColor=white)
+![LLM](https://img.shields.io/badge/LLM-Groq-7C3AED)
+![STT](https://img.shields.io/badge/STT-Vosk%20(offline)-0AA)
 ![Board](https://img.shields.io/badge/Board-RP2350%20LaunchPad-AE2896)
+
+*Module Mikrocontrollertechnik, FH Aachen, Campus Julich*
 
 </div>
 
 ---
 
-## Overview
+## What it does
 
-The user speaks to the board; the board replies with a spoken answer, an on-screen
-message on the LCD, and a colored mood on its WS2812 RGB LEDs. Running a full language
-model on the RP2350 (520 KB SRAM) is not feasible, so we adopt the architecture of real
-commercial edge-AI products (smart speakers): the **microcontroller handles all
-real-time hardware I/O**, while the **heavy AI inference runs off-device** on a laptop
-bridge. To keep genuine intelligence at the edge, a lightweight wake-word and
-voice-activity detection stage still runs on the board itself.
+You hold a button on the board and speak. The board captures your voice, the laptop
+bridge transcribes it and asks a language model, and the board answers back: it shows
+the reply on its LCD as an animated face, speaks it out loud through its buzzer, and
+lights its RGB LEDs in the mood of the answer. Every exchange shows up live in a native
+desktop app. An on-device menu (joystick + buttons) lets you drive the board on its own.
 
-> Full requirements: [`Project_Proposal/Lastenheft.pdf`](../Project_Proposal/Lastenheft.pdf)
-> · Development plan: [`ROADMAP.md`](ROADMAP.md)
-
-## Architecture
-
-```
-                ┌──────────────────────┐
-   speak / type │     React Web UI     │ chatbot , mic, mood, history
-                └──────────┬───────────┘
-                           │ HTTP (/api proxy)
-                           ▼
-┌───────────────┐   USB    ┌───────────────────────┐   ┌───────────────────────┐
-│  RP2350 board │  CDC ACM │   Python bridge       │   │   AI backends         │
-│  (C++ / YAHAL)│◄────────►│   (FastAPI)           │──►│   Grok (cloud)        │
-│               │  framed  │                       │   │   Ollama (local)      │
-│ mic ADC+DMA   │  proto.  │   STT -> LLM -> TTS   │   │   Whisper / Piper     │
-│ I2S audio out │          │                       │   └───────────────────────┘
-│ WS2812 / LCD  │          └──────────┬────────────┘
-│ wake-word/VAD │                     │
-└───────────────┘                     ▼
-                            ┌──────────────────────┐
-                            │   PostgreSQL         │  conversation history
-                            └──────────────────────┘
-```
+Running a full language model on the RP2350 (520 KB SRAM) is not feasible, so this
+project adopts the architecture of real edge-AI products (smart speakers): the
+**microcontroller handles all real-time hardware I/O**, while the **heavy AI runs
+off-device**. The board is the product; the brain is elsewhere, exactly like an Alexa
+needs the cloud.
 
 ## Features
 
-- **Voice in, voice out**: microphone capture on the board, spoken reply playback.
-- **Multimodal feedback**: reply shown on the LCD, emotional tone on RGB LEDs.
-- **Switchable AI**: cloud (Grok / xAI) or fully local (Ollama), one flag to swap.
-- **Persistent memory**: every exchange logged to PostgreSQL (question, reply, mood,
-  sensor snapshot, latency).
-- **Professional web client**: ChatGPT-style React UI with a working microphone button.
-- **Edge intelligence**: on-device wake-word and VAD so audio streams only on demand.
+- **Voice in:** press and hold a button, speak, release. The on-board microphone is
+  sampled with the ADC and streamed to the host over a CRC-checked framed protocol.
+- **Speech to text:** offline transcription with Vosk (English and French models), no
+  cloud and no ffmpeg required.
+- **Language model:** Groq (fast cloud, OpenAI-compatible) by default, with Ollama
+  (local) and xAI Grok selectable at runtime.
+- **The board answers back:** animated LCD face, reply text on the screen, spoken reply
+  through the buzzer (PWM audio), and a mood color on the WS2812 RGB LEDs.
+- **On-device menu:** a clean menu drawn on the LCD, navigated with the joystick and
+  confirmed with the joystick button (Talk, Mood, LEDs, Status, Reset, Close).
+- **Native desktop app:** the polished React UI in a real macOS window (no browser),
+  with a live conversation view and a control panel to drive the board and switch the AI
+  backend.
+- **Robust by design:** the firmware never hangs (talk timeout + a Reset menu item),
+  the bridge degrades gracefully without a database or a board, and the link
+  re-synchronises after lost bytes.
+
+## Architecture
+
+The board and the bridge only know each other through a **framed USB protocol**, so each
+side evolves and is tested on its own.
+
+```
+                       +-----------------------------+
+       speak / type    |     Native desktop app      |  chat, live conversation,
+                       |     (React in pywebview)     |  control panel, mood
+                       +--------------+--------------+
+                                      | HTTP (same-origin)
+                                      v
+ +------------------------+  UART /   +--------------------------+    +------------------+
+ |   RP2350 LaunchPad     |  framed   |   Python bridge          |    |   AI backends    |
+ |   (C++ / YAHAL)        |  CRC16    |   (FastAPI)              |--->|   Groq (cloud)   |
+ |                        |<--------->|                          |    |   Ollama (local) |
+ |  mic ADC capture       |           |   STT -> LLM -> TTS      |    |   Vosk  (STT)    |
+ |  LCD animated face     |           |   + board control        |    |   macOS say (TTS)|
+ |  WS2812 mood LEDs       |           +-------------+------------+    +------------------+
+ |  buzzer speech (PWM)   |                         |
+ |  joystick + buttons    |                         v
+ +------------------------+              +--------------------------+
+                                         |   PostgreSQL (optional)  |  conversation history
+                                         +--------------------------+
+```
+
+The end-to-end voice loop: **hold the button -> mic ADC capture -> AUDIO_IN frames ->
+Vosk transcription -> Groq -> the board shows the mood + reply text and speaks it through
+the buzzer, and the desktop app mirrors the whole conversation.**
+
+## Hardware
+
+| Part | Role |
+|------|------|
+| RP2350 LaunchPad (dual Cortex-M33) | the assistant device, with a built-in CMSIS-DAP debug probe |
+| Educational BoosterPack MKII | microphone, 128x128 LCD, joystick, buttons, buzzer |
+| On-board WS2812 RGB LEDs (8) | mood lighting (PIO timing) |
+| wifiTick add-on (ESP8266) *(optional)* | wireless variant, see below |
 
 ## Tech stack
 
-| Layer        | Technology                                                        |
-|--------------|-------------------------------------------------------------------|
-| Firmware     | C++ on **YAHAL**, Pico SDK, CMake, ARM GNU toolchain              |
-| Host bridge  | Python, **FastAPI**, `pyserial`, `psycopg` (v3)                   |
-| AI (LLM)     | **Grok** (xAI, OpenAI-compatible) · **Ollama** (local)            |
-| AI (speech)  | Whisper / faster-whisper (STT) · Piper (TTS)                      |
-| Web client   | **React 18** + **TypeScript** + **Vite**, Web Speech API          |
-| Database     | **PostgreSQL 16** (Docker)                                         |
+| Layer | Technology |
+|-------|------------|
+| Firmware | C++ on **YAHAL**, Pico SDK, CMake, ARM GNU toolchain |
+| Host bridge | Python, **FastAPI**, `pyserial` |
+| Speech to text | **Vosk** (offline) |
+| Language model | **Groq** (default), Ollama, xAI Grok |
+| Text to speech | macOS `say` (streamed to the board buzzer) |
+| Desktop app | **React + TypeScript + Vite** wrapped in **pywebview** |
+| Database | PostgreSQL (optional, history) |
 
 ## Repository layout
 
 ```
 Project/
-├── firmware/      C++ firmware for the RP2350 (YAHAL, CMake)
-│   └── src/main.cpp        USB CDC ACM echo + LED heartbeat (skeleton)
-├── bridge/        Python host bridge
-│   ├── api.py              FastAPI web API (/chat, /history, /health)
-│   ├── bridge.py           USB serial link CLI + DB logging
-│   └── db.py               PostgreSQL access layer
-├── frontend/      React + TypeScript chat UI (ChatGPT-style, mic)
-├── db/            PostgreSQL via Docker (docker-compose.yml, schema.sql)
-├── ROADMAP.md     Phased development plan
-└── README.md
+|-- firmware/                RP2350 firmware (YAHAL, CMake)
+|   |-- src/
+|   |   |-- main.cpp         orchestration: link, mic capture, buzzer, menu
+|   |   |-- face.cpp         animated LCD face + reply text screen
+|   |   |-- leds.cpp         reactive WS2812 animations
+|   |   |-- menu.cpp         on-device joystick menu
+|   |   `-- protocol.h       framed CRC16 protocol (shared with the bridge)
+|   |-- face_demo/           stand-alone LCD face demo (no host needed)
+|   `-- esp8266/groq_bridge/ ESP8266 sketch for the wireless variant
+|-- bridge/                  Python host
+|   |-- api.py               FastAPI: /chat /history /config /board + voice pipeline
+|   |-- app.py               native desktop launcher (pywebview)
+|   |-- llm.py stt.py tts.py board_link.py protocol.py
+|   `-- tests/               protocol tests
+|-- frontend/                React + TypeScript UI (chat + control panel)
+|-- db/                      PostgreSQL via Docker (optional)
+|-- MASTERPLAN.md            full development plan
+`-- README.md
 ```
-
----
 
 ## Quick start
 
-### Prerequisites
-
-| Tool                 | Used for                          |
-|----------------------|-----------------------------------|
-| Docker               | PostgreSQL database               |
-| Python 3.11+         | host bridge + API                 |
-| Node 18+ / npm       | React frontend                    |
-| CMake + ARM GNU GCC  | building the firmware (board only)|
-| Ollama *(optional)*  | local LLM backend                 |
-
-### 1. Database
-
-```bash
-cd db
-docker compose up -d        # PostgreSQL on localhost:5544 (user/pass/db = edgeai)
-```
-
-### 2. Bridge API
+### 1. Bridge and AI
 
 ```bash
 cd bridge
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # set EDGEAI_LLM, XAI_API_KEY, etc.
-
-uvicorn api:app --reload --port 8000
+cp .env.example .env          # set EDGEAI_LLM=groq and GROQ_API_KEY
 ```
 
-### 3. Web UI
+The Vosk speech model is downloaded into `bridge/models/`. Get a free Groq key at
+<https://console.groq.com/keys>.
+
+### 2. Frontend (once)
 
 ```bash
-cd frontend
-npm install
-npm run dev                 # http://localhost:5173
+cd frontend && npm install && npm run build
 ```
 
-Type a message or tap the mic. The request flows through the Vite `/api` proxy to the
-FastAPI bridge, gets a reply + mood from the LLM, and is logged to PostgreSQL.
-
-### 4. Firmware *(requires the board)*
+### 3. Run the native app
 
 ```bash
-cd firmware
-cmake -B build && cmake --build build
-# flash the generated .uf2 via BOOTSEL / picotool
+cd bridge && ./.venv/bin/python app.py
 ```
 
-The firmware auto-locates YAHAL at `../../yahal_with_examples/YAHAL`
-(override with `export YAHAL_DIR=...`). The red LED blinks once USB is enumerated.
+A native window opens with the chat, the live conversation, and the control panel. Type
+a message, or use the board: hold the talk button and speak.
 
----
+### 4. Firmware (the board)
 
-## Configuration
+This LaunchPad has a built-in debug probe, so it is flashed over SWD with OpenOCD (no
+BOOTSEL needed). The reliable command runs OpenOCD at 1 MHz:
 
-The bridge reads its settings from environment variables (see `bridge/.env.example`):
+```bash
+cd firmware && cmake -B build && cmake --build build
+openocd -s <YAHAL>/config/board_config_files -f rp2350-launchpad.cfg \
+        -c "adapter speed 1000" \
+        -c "program build/edge_ai_firmware.elf verify reset exit"
+```
 
-| Variable               | Default                                            | Description                          |
-|------------------------|----------------------------------------------------|--------------------------------------|
-| `EDGEAI_LLM`           | `local`                                            | AI backend: `cloud` (Grok) or `local`|
-| `XAI_API_KEY`          | *(none)*                                           | Grok API key (required for `cloud`)  |
-| `EDGEAI_GROK_MODEL`    | `grok-2-latest`                                    | Grok model id                        |
-| `OLLAMA_BASE_URL`      | `http://localhost:11434/v1`                        | Ollama OpenAI-compatible endpoint    |
-| `EDGEAI_OLLAMA_MODEL`  | `llama3.1:8b`                                       | local model name                     |
-| `EDGEAI_DSN`           | `postgresql://edgeai:edgeai@localhost:5544/edgeai` | PostgreSQL DSN                       |
+After flashing, replug the USB cable once before running the bridge (the probe leaves its
+serial bridge in a stale state).
 
-## HTTP API
+## The framed protocol
 
-| Method | Endpoint    | Description                                             |
-|--------|-------------|--------------------------------------------------------|
-| `GET`  | `/health`   | Liveness + database/LLM status                         |
-| `POST` | `/chat`     | `{ "message": "..." }` -> `{ reply, mood, latency_ms }`|
-| `GET`  | `/history`  | `?n=20` recent interactions                            |
+A byte-oriented framed protocol over the link, with CRC16 so the receiver can
+re-synchronise after noise or lost bytes.
 
-## Database schema
+```
+SYNC0 SYNC1 | TYPE | LEN_lo LEN_hi | SEQ | PAYLOAD[LEN] | CRC_lo CRC_hi
+ 0xAA  0x55 | 1 B  |    2 bytes    | 1 B |   N bytes    |  CRC16-CCITT
+```
 
-Table `conversations`:
+Types: `AUDIO_IN, AUDIO_OUT, TEXT, MOOD, SENSOR_REQ, SENSOR_RSP, CMD, ACK, LOG`. The C++
+(`firmware/src/protocol.h`) and Python (`bridge/protocol.py`) implementations are
+byte-exact and covered by tests (`bridge/tests/test_protocol.py`).
 
-| Column       | Type          | Description                                  |
-|--------------|---------------|----------------------------------------------|
-| `id`         | `SERIAL` (PK) | unique interaction id                        |
-| `created_at` | `TIMESTAMPTZ` | time of the interaction                      |
-| `mode`       | `TEXT`        | backend used (`cloud` / `local` / `echo`)    |
-| `question`   | `TEXT`        | transcribed user question                    |
-| `reply`      | `TEXT`        | language model reply                         |
-| `mood`       | `TEXT`        | emotional tone shown on the LEDs             |
-| `sensors`    | `JSONB`       | sensor snapshot (temperature, light, ...)    |
-| `latency_ms` | `INTEGER`     | end-to-end response time                     |
+## Two architectures
 
----
-
-## Roadmap
-
-Development is organized in phases (see [`ROADMAP.md`](ROADMAP.md)):
-
-| Phase | Focus                                  | Board needed |
-|-------|----------------------------------------|:------------:|
-| 1     | Foundation (scaffold, USB, DB, UI)     | no  **done** |
-| 2     | Brain on the laptop (LLM, STT, TTS)    |      no      |
-| 3     | Firmware I/O + framed USB protocol     |     yes      |
-| 4     | Full integration                       |     yes      |
-| 5     | Edge AI (wake-word, VAD, sensors)      |     yes      |
-| 6     | Polish, offline mode, tests, demo      |     yes      |
+- **A. Cable (default, full assistant).** The board talks to the laptop bridge over the
+  debug-probe UART. The bridge does STT, the LLM and TTS. This is the complete voice
+  assistant: voice in, text and spoken reply out.
+- **B. Wireless (wifiTick, text only).** With the ESP8266 add-on the board calls Groq
+  directly over WiFi and shows the reply on its screen, with no laptop. Speech in and out
+  need the laptop, so the wireless variant is a text assistant driven by the on-device
+  menu. The ESP8266 sketch is in `firmware/esp8266/groq_bridge/`.
 
 ## Authors
 
-**Saad Fihi** and **Zakaria Sabiri** Mikrocontrollertechnik module,
-FH Aachen, Campus Jülich.
+**Saad Fihi** and **Zakaria Sabiri**, Mikrocontrollertechnik, FH Aachen, Campus Julich.
+
+Built on the YAHAL hardware abstraction library.
