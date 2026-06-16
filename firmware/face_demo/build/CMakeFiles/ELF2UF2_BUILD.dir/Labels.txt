@@ -1,0 +1,13 @@
+# Target labels
+ ELF2UF2_BUILD
+# Source files and their labels
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/CMakeFiles/ELF2UF2_BUILD
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/CMakeFiles/ELF2UF2_BUILD.rule
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/CMakeFiles/ELF2UF2_BUILD-complete.rule
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-build.rule
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-configure.rule
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-download.rule
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-install.rule
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-mkdir.rule
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-patch.rule
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-update.rule

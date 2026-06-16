@@ -1,0 +1,17 @@
+# Host bridge dependencies (Milestone 1: USB link + history)
+pyserial>=3.5
+psycopg[binary]>=3.1
+
+# Web API for the React front-end
+fastapi>=0.110
+uvicorn[standard]>=0.29
+
+# LLM backends (Grok via xAI + Ollama, both OpenAI-compatible) + config
+openai>=1.30
+python-dotenv>=1.0
+
+# Added in later milestones (STT / LLM / TTS), kept here for reference:
+# openai>=1.0          # cloud STT (Whisper) + optional LLM
+# anthropic>=0.40      # cloud LLM (Claude)
+# faster-whisper>=1.0  # local STT
+# piper-tts            # local TTS

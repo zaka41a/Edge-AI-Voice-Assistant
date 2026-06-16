@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/boot_blocks/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/crc32/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/uf2/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

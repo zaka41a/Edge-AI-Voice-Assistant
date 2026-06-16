@@ -1,0 +1,9 @@
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/CMakeFiles/elf2uf2.dir
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/CMakeFiles/edit_cache.dir
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/CMakeFiles/rebuild_cache.dir
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/boot_blocks/CMakeFiles/edit_cache.dir
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/boot_blocks/CMakeFiles/rebuild_cache.dir
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/crc32/CMakeFiles/edit_cache.dir
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/crc32/CMakeFiles/rebuild_cache.dir
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/uf2/CMakeFiles/edit_cache.dir
+/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/uf2/CMakeFiles/rebuild_cache.dir

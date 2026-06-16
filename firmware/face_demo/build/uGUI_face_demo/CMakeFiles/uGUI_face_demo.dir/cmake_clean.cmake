@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_10x16.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_10x16.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_12x16.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_12x16.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_12x20.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_12x20.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_16x20.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_16x20.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_22x36.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_22x36.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_24x40.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_24x40.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_32x53.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_32x53.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_4x6.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_4x6.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_5x12.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_5x12.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_5x8.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_5x8.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_6x10.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_6x10.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_6x8.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_6x8.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_7x12.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_7x12.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_8x12.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_8x12.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_8x14.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_8x14.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_8x8.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/fonts/font_8x8.cpp.obj.d"
+  "CMakeFiles/uGUI_face_demo.dir/uGUI.cpp.obj"
+  "CMakeFiles/uGUI_face_demo.dir/uGUI.cpp.obj.d"
+  "libuGUI_face_demo.a"
+  "libuGUI_face_demo.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/uGUI_face_demo.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

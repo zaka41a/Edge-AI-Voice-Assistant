@@ -1,0 +1,17 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/lcd_face_demo/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/YAHAL_face_demo/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/YAHAL_face_demo/tools/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/YAHAL_face_demo/include/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/YAHAL_face_demo/src/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/YAHAL_face_demo/src/MCU/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/YAHAL_face_demo/src/MCU/rp2350/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/YAHAL_face_demo/src/task/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/YAHAL_face_demo/src/util/cmake_install.cmake",
+		"/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/uGUI_face_demo/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

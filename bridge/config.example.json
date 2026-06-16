@@ -1,0 +1,9 @@
+{
+  "serial": {
+    "port": "/dev/tty.usbmodem0001",
+    "baudrate": 115200
+  },
+  "database": {
+    "dsn": "postgresql://edgeai:edgeai@localhost:5544/edgeai"
+  }
+}

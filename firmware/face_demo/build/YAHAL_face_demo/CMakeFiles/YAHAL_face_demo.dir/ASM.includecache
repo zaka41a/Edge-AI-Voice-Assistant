@@ -1,0 +1,14 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/zakaria/Documents/Mikrocontrollertechnik/yahal_with_examples/YAHAL/include/board/rp2350-launchpad/board.h
+
+/Users/zakaria/Documents/Mikrocontrollertechnik/yahal_with_examples/YAHAL/src/MCU/rp2350/reset_rp2350.S
+board.h
+/Users/zakaria/Documents/Mikrocontrollertechnik/yahal_with_examples/YAHAL/src/MCU/rp2350/board.h
+

@@ -1,0 +1,20 @@
+# Firmware build artifacts
+firmware/build/
+firmware/cmake-build-*/
+*.uf2
+*.elf
+*.bin
+*.hex
+*.map
+
+# Python
+bridge/.venv/
+__pycache__/
+*.pyc
+
+# Local config / secrets
+bridge/config.json
+bridge/.env
+
+# OS
+.DS_Store

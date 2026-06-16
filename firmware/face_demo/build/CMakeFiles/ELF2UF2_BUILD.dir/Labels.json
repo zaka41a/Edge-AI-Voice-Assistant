@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/CMakeFiles/ELF2UF2_BUILD"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/CMakeFiles/ELF2UF2_BUILD.rule"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/CMakeFiles/ELF2UF2_BUILD-complete.rule"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-build.rule"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-configure.rule"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-download.rule"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-install.rule"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-mkdir.rule"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-patch.rule"
+		},
+		{
+			"file" : "/Users/zakaria/Documents/Mikrocontrollertechnik/Project/firmware/face_demo/build/elf2uf2/src/ELF2UF2_BUILD-stamp/ELF2UF2_BUILD-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"ELF2UF2_BUILD"
+		],
+		"name" : "ELF2UF2_BUILD"
+	}
+}
