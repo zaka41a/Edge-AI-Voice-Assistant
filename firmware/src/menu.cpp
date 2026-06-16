@@ -60,7 +60,7 @@ void Menu::draw() {
             _gui.FillRoundFrame(3, y - 2, 124, y + ROW_H - 6, 4, ROW_BG);
             _gui.DrawRoundFrame(3, y - 2, 124, y + ROW_H - 6, 4, ACCENT);
         }
-        _gui.SetBackcolor(on ? ROW_BG : BG);avant
+        _gui.SetBackcolor(on ? ROW_BG : BG);
         _gui.SetForecolor(on ? ACCENT : 0x808890);
         _gui.PutString(10, y + 1, ICONS[i]);
         _gui.SetForecolor(on ? 0xFFFFFF : 0xB8C0CC);
