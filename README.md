@@ -62,7 +62,7 @@ side evolves and is tested on its own.
 ```
                        +-----------------------------+
        speak / type    |     Native desktop app      |  chat, live conversation,
-                       |     (React in pywebview)     |  control panel, mood
+                       |     (React in pywebview)    |  control panel, mood
                        +--------------+--------------+
                                       | HTTP (same-origin)
                                       v
@@ -72,7 +72,7 @@ side evolves and is tested on its own.
  |                        |<--------->|                          |    |   Ollama (local) |
  |  mic ADC capture       |           |   STT -> LLM -> TTS      |    |   Vosk  (STT)    |
  |  LCD animated face     |           |   + board control        |    |   macOS say (TTS)|
- |  WS2812 mood LEDs       |           +-------------+------------+    +------------------+
+ |  WS2812 mood LEDs      |           +-------------+------------+    +------------------+
  |  buzzer speech (PWM)   |                         |
  |  joystick + buttons    |                         v
  +------------------------+              +--------------------------+
