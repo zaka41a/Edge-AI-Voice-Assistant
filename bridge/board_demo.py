@@ -1,25 +1,12 @@
-#!/usr/bin/env python3
-"""Drive the board over the framed USB protocol and watch it react.
-
-Flash firmware/ (edge_ai_firmware) first, then run:
-
-    ./.venv/bin/python board_demo.py                 # auto-detect the port
-    ./.venv/bin/python board_demo.py /dev/cu.usbmodemXXXX
-
-It scripts a full interaction (listening -> thinking -> speaking with several
-moods, plus a "set LEDs red" command) so the LCD face and the WS2812 LEDs go
-through their whole repertoire. ACK/LOG frames coming back are printed.
-"""
 from __future__ import annotations
 
 import glob
 import sys
 import time
 
-import serial  # pyserial
+import serial
 
 import protocol as p
-
 
 def find_port(arg: str | None) -> str:
     if arg:
@@ -28,7 +15,6 @@ def find_port(arg: str | None) -> str:
     if not cands:
         sys.exit("No serial port found. Pass it explicitly: board_demo.py /dev/cu.usbmodemXXXX")
     return cands[0]
-
 
 def main() -> None:
     port = find_port(sys.argv[1] if len(sys.argv) > 1 else None)
@@ -39,9 +25,7 @@ def main() -> None:
     dec = p.Decoder()
 
     def send(frame: bytes, note: str, repeat: int = 3) -> None:
-        # The firmware is RX-only and the commands are idempotent, so we send
-        # each one a few times: cheap insurance against this debug-probe UART
-        # bridge dropping bytes. Any ACK/LOG the board does emit is printed.
+
         print(f"  -> {note}")
         for _ in range(repeat):
             ser.write(frame)
@@ -52,8 +36,6 @@ def main() -> None:
             elif f.type == p.Type.LOG:
                 print(f"     <- LOG '{f.payload.decode(errors='replace')}'")
 
-    # A scripted conversation: state changes + moods + a direct LED command.
-    # Each frame gets a distinct sequence number so the ACKs are traceable.
     steps = [
         (lambda q: p.state_frame("idle", q),        "state = IDLE (breathing)"),
         (lambda q: p.state_frame("listening", q),   "state = LISTENING (blue scan)"),
@@ -76,7 +58,6 @@ def main() -> None:
 
     print("\nDone. The board keeps animating on its own.")
     ser.close()
-
 
 if __name__ == "__main__":
     main()

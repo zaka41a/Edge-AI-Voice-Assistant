@@ -1,9 +1,3 @@
-"""PostgreSQL access layer for the conversation history.
-
-Thin wrapper around psycopg (v3). The bridge calls `Database.log(...)`
-after every interaction to persist it, and `Database.recent(...)` to
-read it back.
-"""
 from __future__ import annotations
 
 import psycopg
@@ -22,10 +16,9 @@ CREATE TABLE IF NOT EXISTS conversations (
 );
 """
 
-
 class Database:
     def __init__(self, dsn: str):
-        # autocommit keeps the skeleton simple (no explicit transactions)
+
         self.conn = psycopg.connect(dsn, autocommit=True)
         self.conn.execute(SCHEMA)
 

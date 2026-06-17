@@ -1,15 +1,3 @@
-"""Framed USB protocol for the Edge AI Voice Assistant (host side).
-
-Byte-exact mirror of firmware/src/protocol.h. Every frame is CRC-checked so the
-receiver can resynchronise after lost or noisy bytes.
-
-Frame layout:
-    SYNC0 SYNC1 | TYPE | LEN_lo LEN_hi | SEQ | PAYLOAD[LEN] | CRC_lo CRC_hi
-      0xAA 0x55 | 1 B  |    2 bytes    | 1 B |   N bytes    |   CRC16-CCITT
-
-CRC16-CCITT (poly 0x1021, init 0xFFFF) covers TYPE, LEN, SEQ and PAYLOAD
-(the two SYNC bytes are excluded), little-endian on the wire.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,11 +6,10 @@ from typing import Iterator
 SYNC0 = 0xAA
 SYNC1 = 0x55
 MAX_PAYLOAD = 1024
-OVERHEAD = 8  # 2 sync + type + 2 len + seq + 2 crc
-
+OVERHEAD = 8
 
 class Type:
-    """Frame type byte. Keep in sync with proto::Type in protocol.h."""
+
     AUDIO_IN = 0x01
     AUDIO_OUT = 0x02
     TEXT = 0x03
@@ -33,32 +20,26 @@ class Type:
     ACK = 0x08
     LOG = 0x09
 
-
-# MOOD payload byte values (matches Face::Mood / proto::Mood order).
 MOOD_BYTE = {"neutral": 0, "happy": 1, "sad": 2, "angry": 3, "curious": 4}
 MOOD_NAME = {v: k for k, v in MOOD_BYTE.items()}
 
-# Assistant state byte (CMD_STATE payload[1]); matches Face::State / proto::DState.
 STATE_BYTE = {"idle": 0, "listening": 1, "thinking": 2, "speaking": 3}
 
-
 class Cmd:
-    """CMD sub-command in payload[0]. Keep in sync with proto::Cmd."""
-    STATE = 0x01    # payload[1] = state byte
-    LED_RGB = 0x02  # payload[1..3] = R, G, B
 
+    STATE = 0x01
+    LED_RGB = 0x02
 
 def crc16(data: bytes, crc: int = 0xFFFF) -> int:
-    """CRC16-CCITT, MSB-first, poly 0x1021, init 0xFFFF."""
+
     for byte in data:
         crc ^= byte << 8
         for _ in range(8):
             crc = ((crc << 1) ^ 0x1021) & 0xFFFF if (crc & 0x8000) else (crc << 1) & 0xFFFF
     return crc & 0xFFFF
 
-
 def encode(type_: int, seq: int, payload: bytes = b"") -> bytes:
-    """Build a complete frame ready to write to the serial link."""
+
     if len(payload) > MAX_PAYLOAD:
         raise ValueError(f"payload too big: {len(payload)} > {MAX_PAYLOAD}")
     n = len(payload)
@@ -66,22 +47,15 @@ def encode(type_: int, seq: int, payload: bytes = b"") -> bytes:
     c = crc16(body)
     return bytes((SYNC0, SYNC1)) + body + bytes((c & 0xFF, (c >> 8) & 0xFF))
 
-
 @dataclass
 class Frame:
     type: int
     seq: int
     payload: bytes
 
-
 class Decoder:
-    """Streaming, resynchronising decoder.
 
-    Feed it raw bytes; it yields every complete, CRC-valid frame it finds and
-    silently drops garbage / corrupted frames (counted in `dropped`).
-    """
-
-    _S_SYNC0, _S_SYNC1, _S_TYPE, _S_LEN_LO, _S_LEN_HI, _S_SEQ, \
+    _S_SYNC0, _S_SYNC1, _S_TYPE, _S_LEN_LO, _S_LEN_HI, _S_SEQ,\
         _S_PAY, _S_CRC_LO, _S_CRC_HI = range(9)
 
     def __init__(self) -> None:
@@ -110,7 +84,7 @@ class Decoder:
             if b == SYNC1:
                 self._st = self._S_TYPE
             elif b == SYNC0:
-                pass  # stay: another possible start
+                pass
             else:
                 self.dropped += 1
                 self._st = self._S_SYNC0
@@ -149,20 +123,14 @@ class Decoder:
             self.dropped += 1
         return None
 
-
-# --- convenience builders for the common host -> board frames ----------------
-
 def text_frame(text: str, seq: int = 0) -> bytes:
     return encode(Type.TEXT, seq, text.encode("utf-8")[:MAX_PAYLOAD])
-
 
 def mood_frame(mood: str, seq: int = 0) -> bytes:
     return encode(Type.MOOD, seq, bytes((MOOD_BYTE.get(mood, 0),)))
 
-
 def state_frame(state: str, seq: int = 0) -> bytes:
     return encode(Type.CMD, seq, bytes((Cmd.STATE, STATE_BYTE.get(state, 0))))
-
 
 def led_rgb_frame(r: int, g: int, b: int, seq: int = 0) -> bytes:
     return encode(Type.CMD, seq, bytes((Cmd.LED_RGB, r & 0xFF, g & 0xFF, b & 0xFF)))

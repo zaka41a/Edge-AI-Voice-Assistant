@@ -1,19 +1,3 @@
-#!/usr/bin/env python3
-"""Edge AI Voice Assistant - local desktop control app (no web, no browser).
-
-A standalone Tkinter window that runs on the laptop and drives the RP2350 board
-directly over the back-channel UART. From here you can:
-
-  - chat with the assistant (LLM -> reply + mood), and have the BOARD show it
-  - manually set the board mood / state / LCD text / LED color
-  - switch the AI backend (local Ollama <-> cloud Grok)
-  - browse the PostgreSQL conversation history
-
-Everything degrades gracefully: no board, no LLM or no database just disables
-the matching parts. Run:
-
-    cd bridge && ./.venv/bin/python desktop_app.py
-"""
 from __future__ import annotations
 
 import os
@@ -34,8 +18,8 @@ import tts as tts_mod
 
 try:
     from db import Database
-except Exception:  # noqa: BLE001
-    Database = None  # type: ignore
+except Exception:
+    Database = None
 
 DSN = os.environ.get("EDGEAI_DSN", "postgresql://edgeai:edgeai@localhost:5544/edgeai")
 
@@ -55,7 +39,6 @@ PANEL = "#1b1e25"
 FG = "#e7e9ee"
 DIM = "#9aa3b2"
 
-
 class DesktopApp:
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -64,7 +47,6 @@ class DesktopApp:
         root.geometry("780x640")
         root.minsize(680, 560)
 
-        # --- backends -----------------------------------------------------
         self.board = board_link.BoardLink()
         self.llm = llm_mod.get_llm()
         self.llm_mode = tk.StringVar(value=os.environ.get("EDGEAI_LLM", "local"))
@@ -74,7 +56,7 @@ class DesktopApp:
         if Database is not None:
             try:
                 self.db = Database(DSN)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 self.db = None
 
         self._build_styles()
@@ -83,7 +65,6 @@ class DesktopApp:
             self.board.set_state("idle")
         self.refresh_status()
 
-    # ------------------------------------------------------------------ UI
     def _build_styles(self) -> None:
         st = ttk.Style()
         try:
@@ -110,7 +91,7 @@ class DesktopApp:
         return f
 
     def _build_ui(self) -> None:
-        # Header
+
         head = ttk.Frame(self.root)
         head.pack(fill="x", padx=16, pady=(14, 0))
         ttk.Label(head, text="Edge AI Voice Assistant", style="Title.TLabel").pack(side="left")
@@ -125,7 +106,6 @@ class DesktopApp:
         right.pack(side="right", fill="y")
         right.pack_propagate(False)
 
-        # --- left: chat ---------------------------------------------------
         ttk.Label(left, text="CONVERSATION", style="H.TLabel").pack(anchor="w")
         self.log = tk.Text(left, bg=PANEL, fg=FG, insertbackground=FG,
                            relief="flat", wrap="word", height=18,
@@ -145,7 +125,6 @@ class DesktopApp:
         self.send_btn = ttk.Button(row, text="Send", command=self.on_send)
         self.send_btn.pack(side="right")
 
-        # --- right: controls ---------------------------------------------
         f = self._section(right, "AI backend")
         ttk.Radiobutton(f, text="Local (Ollama)", value="local",
                         variable=self.llm_mode, command=self.on_llm).pack(anchor="w")
@@ -176,9 +155,7 @@ class DesktopApp:
                            for name, rgb in LED_PRESETS])
 
     def _chip_row(self, parent, items) -> None:
-        # NOTE: macOS Tk ignores tk.Button bg, so the button face stays light.
-        # Use DARK text so labels are always readable, and a colored swatch
-        # (which does respect bg) as the color cue.
+
         wrap = ttk.Frame(parent)
         wrap.pack(fill="x")
         for i, (label, color, cmd) in enumerate(items):
@@ -198,12 +175,11 @@ class DesktopApp:
 
     @staticmethod
     def _rgb_to_hex(rgbstr: str) -> str:
-        # "rgb(255,0,0)" -> "#ff0000"
+
         nums = rgbstr[rgbstr.find("(") + 1:rgbstr.find(")")].split(",")
         r, g, b = (int(n) for n in nums)
         return f"#{r:02x}{g:02x}{b:02x}"
 
-    # --------------------------------------------------------------- logic
     def refresh_status(self) -> None:
         board = "board OK" if self.board.connected else "no board"
         db = "db OK" if self.db is not None else "no db"
@@ -248,13 +224,12 @@ class DesktopApp:
             try:
                 res = self.llm.chat(msg)
                 reply, mood, mode = res.reply, res.mood, self.llm.name
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 reply, mood, mode = f"(LLM error: {exc})", "sad", "error"
         else:
             reply, mood, mode = "(no LLM configured)", "neutral", "none"
         latency = int((time.time() - t0) * 1000)
 
-        # present on the board
         self.board.set_mood(mood)
         self.board.send_text(reply)
         self.board.set_state("speaking")
@@ -266,7 +241,7 @@ class DesktopApp:
             try:
                 self.db.log(mode=mode, question=msg, reply=reply, mood=mood,
                             sensors={}, latency_ms=latency)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
 
         self.root.after(0, lambda: self._done(reply, mood, latency))
@@ -275,12 +250,10 @@ class DesktopApp:
         self._append("Assistant:", reply, "ai", f"mood: {mood}  ·  {latency} ms")
         self.send_btn.configure(state="normal")
 
-
 def main() -> None:
     root = tk.Tk()
     DesktopApp(root)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()

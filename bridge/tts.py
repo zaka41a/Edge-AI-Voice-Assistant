@@ -1,32 +1,18 @@
-"""Text-to-speech for the Edge AI Voice Assistant (host side).
-
-Gives the assistant a real voice. The default backend uses macOS's built-in
-`say` command: zero install, fully offline, instant, which makes for a robust
-live demo. The interface is pluggable so Piper (local, cross-platform) or a
-cloud TTS can be added later without touching the callers.
-
-    EDGEAI_TTS=say     -> macOS `say` (default on macOS)
-    EDGEAI_TTS=none    -> disabled (no audio)
-
-Voice and rate can be set with EDGEAI_TTS_VOICE and EDGEAI_TTS_RATE.
-"""
 from __future__ import annotations
 
 import os
 import shutil
 import subprocess
 
-
 class TTS:
-    """Common interface."""
+
     name = "tts"
 
-    def speak(self, text: str) -> None:        # blocking: returns when spoken
+    def speak(self, text: str) -> None:
         raise NotImplementedError
 
     def available(self) -> bool:
         return True
-
 
 class NullTTS(TTS):
     name = "none"
@@ -34,9 +20,8 @@ class NullTTS(TTS):
     def speak(self, text: str) -> None:
         pass
 
-
 class MacSayTTS(TTS):
-    """macOS `say`: offline, no dependencies."""
+
     name = "say"
 
     def __init__(self, voice: str | None = None, rate: int | None = None):
@@ -58,36 +43,49 @@ class MacSayTTS(TTS):
         except OSError:
             pass
 
+def synth_pcm8(text: str, rate: int = 16000, voice: str | None = None) -> bytes | None:
 
-def synth_pcm8(text: str, rate: int = 8000, voice: str | None = None) -> bytes | None:
-    """Render text to 8-bit signed mono PCM at `rate` Hz, for the board buzzer.
-
-    Uses macOS `say` + `afconvert`. Returns None if unavailable or on failure.
-    """
-    import audioop
     import tempfile
     import wave
+
+    import numpy as np
 
     if not text.strip() or shutil.which("say") is None or shutil.which("afconvert") is None:
         return None
     voice = voice or os.environ.get("EDGEAI_TTS_VOICE", "Daniel")
+    say_rate = os.environ.get("EDGEAI_TTS_RATE", "160")
     aiff = tempfile.mktemp(suffix=".aiff")
     wav = tempfile.mktemp(suffix=".wav")
     try:
-        subprocess.run(["say", "-v", voice, "-o", aiff, text], check=False)
+        subprocess.run(["say", "-v", voice, "-r", say_rate, "-o", aiff, text], check=False)
         subprocess.run(["afconvert", "-f", "WAVE", "-d", f"LEI16@{rate}", "-c", "1",
                         aiff, wav], check=False)
         with wave.open(wav, "rb") as wf:
-            pcm16 = wf.readframes(wf.getnframes())
-        # Maximise loudness for the small buzzer: normalise, then over-drive so
-        # the signal saturates (compression). audioop saturates on overflow, so
-        # this lifts the average level -> much louder (a bit distorted, fine here).
-        peak = audioop.max(pcm16, 2)
-        if peak > 0:
-            drive = float(os.environ.get("EDGEAI_BUZZER_DRIVE", "3.5"))
-            pcm16 = audioop.mul(pcm16, 2, (32000.0 / peak) * drive)
-        return audioop.lin2lin(pcm16, 2, 1)          # 16-bit -> 8-bit signed
-    except Exception:  # noqa: BLE001
+            raw = wf.readframes(wf.getnframes())
+
+        x = np.frombuffer(raw, dtype="<i2").astype(np.float32)
+        if x.size == 0:
+            return None
+
+        pre = float(os.environ.get("EDGEAI_BUZZER_PRE", "0.85"))
+        x = np.append(x[0], x[1:] - pre * x[:-1])
+
+        a = 0.97
+        y = np.empty_like(x)
+        acc = 0.0
+        for i, s in enumerate(x):
+            acc = a * acc + (1 - a) * s
+            y[i] = s - acc
+        x = y
+
+        peak = np.max(np.abs(x)) or 1.0
+        drive = float(os.environ.get("EDGEAI_BUZZER_DRIVE", "3.0"))
+        x = np.tanh((x / peak) * drive)
+        x = x / (np.max(np.abs(x)) or 1.0)
+
+        pcm8 = np.clip(np.round(x * 127.0), -128, 127).astype(np.int8)
+        return pcm8.tobytes()
+    except Exception:
         return None
     finally:
         for f in (aiff, wav):
@@ -96,16 +94,14 @@ def synth_pcm8(text: str, rate: int = 8000, voice: str | None = None) -> bytes |
             except OSError:
                 pass
 
-
 def get_tts() -> TTS:
-    """Build the configured TTS backend, falling back gracefully."""
+
     mode = os.environ.get("EDGEAI_TTS", "say").strip().lower()
     if mode == "none":
         return NullTTS()
-    # default: macOS say (fall back to null if unavailable)
+
     say = MacSayTTS()
     return say if say.available() else NullTTS()
-
 
 if __name__ == "__main__":
     import sys
