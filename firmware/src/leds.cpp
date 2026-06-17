@@ -1,14 +1,8 @@
-// ---------------------------------------------
-//  Edge AI Voice Assistant - reactive WS2812 LEDs
-//  Author: Zakaria Sabiri
-//  Implementation, see leds.h.
-// ---------------------------------------------
 #include "leds.h"
 
 namespace {
-    constexpr int N = LED_RGB_COUNT;   // 8 on-board WS2812 LEDs
+    constexpr int N = LED_RGB_COUNT;
 
-    // Scale a 24-bit RGB color by a 0..255 brightness factor.
     uint32_t scale(uint32_t rgb, uint8_t b) {
         uint32_t r = ((rgb >> 16) & 0xFF) * b / 255;
         uint32_t g = ((rgb >>  8) & 0xFF) * b / 255;
@@ -16,7 +10,6 @@ namespace {
         return (r << 16) | (g << 8) | bl;
     }
 
-    // Triangle wave 0..255..0 with the given period (in frames).
     uint8_t triangle(uint32_t frame, uint32_t period) {
         uint32_t p = frame % period;
         uint32_t half = period / 2;
@@ -31,20 +24,26 @@ MoodLeds::MoodLeds() : _leds(LED_RGB_GPIO, LED_RGB_COUNT) {
 
 uint32_t MoodLeds::_moodColor() const {
     switch (_mood) {
-        case HAPPY:   return 0x00FF00;  // green
-        case SAD:     return 0x1E90FF;  // dodger blue
-        case ANGRY:   return 0xFF0000;  // red
-        case CURIOUS: return 0xFFD700;  // gold
+        case HAPPY:   return 0x00FF00;
+        case SAD:     return 0x1E90FF;
+        case ANGRY:   return 0xFF0000;
+        case CURIOUS: return 0xFFD700;
         case NEUTRAL:
-        default:      return 0x00FFFF;  // cyan
+        default:      return 0x00FFFF;
     }
 }
 
-// One shot update of the whole strip from a local buffer. Using set_colors()
-// (a single PIO flush) instead of 8 separate set_color() calls keeps the
-// driver's interrupts-off critical section to ~1 ms per frame instead of ~8 ms,
-// which also makes UART reception more reliable.
+static inline uint8_t gamma8(uint8_t v) {
+    return static_cast<uint8_t>((static_cast<uint16_t>(v) * v) / 255);
+}
+static inline uint32_t gamma_rgb(uint32_t c) {
+    return (static_cast<uint32_t>(gamma8((c >> 16) & 0xFF)) << 16) |
+           (static_cast<uint32_t>(gamma8((c >>  8) & 0xFF)) <<  8) |
+            static_cast<uint32_t>(gamma8(c & 0xFF));
+}
+
 void MoodLeds::_flush(uint32_t (&buf)[N]) {
+    for (int i = 0; i < N; ++i) buf[i] = gamma_rgb(buf[i]);
     _leds.set_colors(buf, N);
 }
 
@@ -75,12 +74,12 @@ void MoodLeds::tick() {
     uint32_t buf[N];
 
     switch (_state) {
-        case IDLE: {                         // gentle breathing in mood color
-            uint8_t b = 20 + triangle(_frame, 60) * 60 / 255;   // 20..80
+        case IDLE: {
+            uint8_t b = 20 + triangle(_frame, 60) * 60 / 255;
             for (int i = 0; i < N; ++i) buf[i] = scale(col, b);
             break;
         }
-        case LISTENING: {                    // blue dot scanning back and forth
+        case LISTENING: {
             int pos = triangle(_frame, (N - 1) * 2) * (N - 1) / 255;
             for (int i = 0; i < N; ++i) {
                 int d = (i > pos) ? (i - pos) : (pos - i);
@@ -89,17 +88,17 @@ void MoodLeds::tick() {
             }
             break;
         }
-        case THINKING: {                     // orange spinner with a fading tail
+        case THINKING: {
             int head = (_frame / 2) % N;
             for (int i = 0; i < N; ++i) {
-                int d = (head - i + N) % N;             // distance behind the head
+                int d = (head - i + N) % N;
                 uint8_t b = (d == 0) ? 255 : (d == 1) ? 90 : (d == 2) ? 25 : 4;
                 buf[i] = scale(0xFF6000, b);
             }
             break;
         }
-        case SPEAKING: {                     // whole strip pulsing in mood color
-            uint8_t b = 60 + triangle(_frame, 12) * 195 / 255;  // lively 60..255
+        case SPEAKING: {
+            uint8_t b = 60 + triangle(_frame, 12) * 195 / 255;
             for (int i = 0; i < N; ++i) buf[i] = scale(col, b);
             break;
         }
