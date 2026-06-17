@@ -1,8 +1,5 @@
 import type { BoardCmd, ChatResponse, HistoryItem, Status } from "./types";
 
-// In dev, the vite server runs on :5173 and proxies /api -> :8000. In the
-// packaged desktop app, FastAPI serves this build and the API at the same
-// origin, so we call the routes directly at the root.
 const BASE = window.location.port === "5173" ? "/api" : "";
 
 export async function sendChat(message: string): Promise<ChatResponse> {

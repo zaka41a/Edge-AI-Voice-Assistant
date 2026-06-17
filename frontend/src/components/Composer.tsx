@@ -14,7 +14,6 @@ export function Composer({ onSend, disabled }: ComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const speechOk = isSpeechSupported();
 
-  // Auto-grow the textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;

@@ -1,13 +1,3 @@
-// Minimal wrapper around the browser Web Speech API (SpeechRecognition).
-// Works in Chrome / Edge. Provides a simple start/stop microphone dictation
-// that streams interim and final transcripts back to the caller.
-//
-// In a later milestone this can be swapped for real audio streaming to the
-// bridge (board mic -> USB -> STT), but for the web UI this gives an instant,
-// working mic button.
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 type SpeechHandlers = {
   onResult: (transcript: string, isFinal: boolean) => void;
   onEnd?: () => void;

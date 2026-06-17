@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getConfig, setLlm, sendBoard } from "../api";
 import type { Status } from "../types";
+import { DeviceTwin } from "./DeviceTwin";
 
 const MOOD_COLORS: Record<string, string> = {
   neutral: "#00cccc",
@@ -78,7 +79,10 @@ export function ControlPanel() {
 
       {err && <div className="cp-banner">Bridge API unreachable</div>}
 
-      {/* Device status card */}
+      {}
+      <DeviceTwin />
+
+      {}
       <div className="cp-card">
         <div className="cp-stat">
           <span className={`cp-dot ${status?.board_connected ? "on" : "off"}`} />
@@ -104,7 +108,7 @@ export function ControlPanel() {
         </div>
       </div>
 
-      {/* AI backend */}
+      {}
       <h3 className="cp-label">AI backend</h3>
       <div className="cp-seg">
         <button
@@ -127,7 +131,7 @@ export function ControlPanel() {
         </button>
       </div>
 
-      {/* Mood */}
+      {}
       <h3 className="cp-label">Board mood</h3>
       <div className="cp-grid">
         {moods.map((m) => (
@@ -146,7 +150,7 @@ export function ControlPanel() {
         ))}
       </div>
 
-      {/* State */}
+      {}
       <h3 className="cp-label">Board state</h3>
       <div className="cp-grid four">
         {states.map((s) => (
@@ -164,7 +168,7 @@ export function ControlPanel() {
         ))}
       </div>
 
-      {/* LCD text */}
+      {}
       <h3 className="cp-label">LCD text</h3>
       <div className="cp-text">
         <input
@@ -180,7 +184,7 @@ export function ControlPanel() {
         </button>
       </div>
 
-      {/* LED */}
+      {}
       <h3 className="cp-label">LED color</h3>
       <div className="cp-grid">
         {LED_PRESETS.map((p) => (

@@ -40,6 +40,7 @@ export interface Status {
   tts: string;
   moods: string[];
   states: string[];
+  live?: { mood: string; state: string };
 }
 
 export interface BoardCmd {

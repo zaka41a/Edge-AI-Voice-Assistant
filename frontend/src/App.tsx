@@ -33,12 +33,10 @@ export default function App() {
     try {
       setHistory(await fetchHistory(20));
     } catch {
-      /* ignore */
+
     }
   }
 
-  // Append voice-initiated exchanges (from the board's microphone) to the chat
-  // as they appear in the history, so the interface shows the whole discussion.
   async function pollVoice() {
     try {
       const items = await fetchHistory(15);
@@ -66,14 +64,13 @@ export default function App() {
         refreshHistory();
       }
     } catch {
-      /* ignore */
+
     }
   }
 
   useEffect(() => {
     checkHealth().then(setDbConnected);
-    // Mark everything already in history as seen so only NEW voice exchanges
-    // (after the app opens) get streamed into the chat.
+
     fetchHistory(50)
       .then((items) => items.forEach((it) => seenRef.current.add(it.created_at)))
       .catch(() => {})
@@ -152,6 +149,9 @@ export default function App() {
             <span className="chat-subtitle">RP2350 LaunchPad</span>
           </div>
           <div className="chat-mood">
+            <span className={`live-pill ${dbConnected ? "on" : "off"}`}>
+              {dbConnected ? "online" : "offline"}
+            </span>
             <MoodDot mood={mood} />
             <span>{mood}</span>
           </div>
