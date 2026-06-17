@@ -18,3 +18,4 @@ bridge/.env
 
 # OS
 .DS_Store
+frontend/tsconfig.tsbuildinfo
