@@ -125,7 +125,6 @@ Project/
 |   `-- tests/               protocol tests
 |-- frontend/                React + TypeScript UI (chat + control panel)
 |-- db/                      PostgreSQL via Docker (optional)
-|-- MASTERPLAN.md            full development plan
 `-- README.md
 ```
 
