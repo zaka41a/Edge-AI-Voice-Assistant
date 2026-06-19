@@ -43,6 +43,17 @@ export async function setLlm(llm: string): Promise<Status> {
   return res.json();
 }
 
+export async function transcribe(pcm: ArrayBuffer, rate = 16000): Promise<string> {
+  const res = await fetch(`${BASE}/transcribe?rate=${rate}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: pcm,
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const data = await res.json();
+  return (data.text as string) ?? "";
+}
+
 export async function sendBoard(cmd: BoardCmd): Promise<void> {
   const res = await fetch(`${BASE}/board`, {
     method: "POST",

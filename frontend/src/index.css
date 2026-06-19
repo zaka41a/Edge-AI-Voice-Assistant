@@ -330,6 +330,30 @@ body {
 }
 .twin-mood { font-weight: 600; }
 
+.cp-wifi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 12px 13px;
+  margin-bottom: 18px;
+}
+.cp-wifi-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.cp-wifi-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.cp-wifi-sub { font-size: 11px; color: var(--text-dim); }
+.cp-wifi-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(79, 140, 255, 0.12);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
 .msg-row { animation: msg-in 0.28s ease both; }
 @keyframes msg-in {
   from { opacity: 0; transform: translateY(8px); }

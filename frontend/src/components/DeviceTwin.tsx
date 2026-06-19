@@ -56,7 +56,6 @@ export function DeviceTwin() {
     <div className="twin">
       <div className="twin-head" data-state={state}>
         <svg viewBox="0 0 120 110" className="twin-face">
-          {}
           <circle cx="40" cy="44" r="13" fill="#fff" />
           <circle cx="80" cy="44" r="13" fill="#fff" />
           <circle cx="40" cy="44" r="6" fill={c} className="twin-pupil" />

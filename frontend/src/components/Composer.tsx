@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Microphone, isSpeechSupported } from "../speech";
+import { MicRecorder } from "../recorder";
+import { transcribe } from "../api";
 
 interface ComposerProps {
   onSend: (text: string) => void;
@@ -8,11 +9,11 @@ interface ComposerProps {
 
 export function Composer({ onSend, disabled }: ComposerProps) {
   const [value, setValue] = useState("");
-  const [listening, setListening] = useState(false);
-  const micRef = useRef<Microphone | null>(null);
-  const baseRef = useRef("");
+  const [recording, setRecording] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const recRef = useRef<MicRecorder | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const speechOk = isSpeechSupported();
+  const micOk = MicRecorder.supported();
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -35,42 +36,45 @@ export function Composer({ onSend, disabled }: ComposerProps) {
     }
   }
 
-  function toggleMic() {
-    if (!speechOk) return;
-    if (!micRef.current) {
-      micRef.current = new Microphone({
-        onResult: (transcript, isFinal) => {
-          setValue((baseRef.current + " " + transcript).trim());
-          if (isFinal) baseRef.current = (baseRef.current + " " + transcript).trim();
-        },
-        onEnd: () => setListening(false),
-        onError: () => setListening(false),
-      });
+  async function toggleMic() {
+    if (!micOk || busy) return;
+    if (!recording) {
+      try {
+        recRef.current = new MicRecorder();
+        await recRef.current.start();
+        setRecording(true);
+      } catch {
+        setRecording(false);
+      }
+      return;
     }
-    if (listening) {
-      micRef.current.stop();
-      setListening(false);
-    } else {
-      baseRef.current = value;
-      micRef.current.start();
-      setListening(true);
+    setRecording(false);
+    setBusy(true);
+    try {
+      const { pcm, rate } = await recRef.current!.stop();
+      const text = await transcribe(pcm, rate);
+      if (text) setValue((v) => (v ? v + " " + text : text));
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false);
     }
   }
 
+  const placeholder = recording
+    ? "Listening… tap the mic to stop"
+    : busy
+    ? "Transcribing…"
+    : "Message the Edge AI Assistant…";
+
   return (
     <div className="composer">
-      <div className={`composer-box ${listening ? "listening" : ""}`}>
+      <div className={`composer-box ${recording ? "listening" : ""}`}>
         <button
-          className={`mic-btn ${listening ? "active" : ""}`}
+          className={`mic-btn ${recording ? "active" : ""}`}
           onClick={toggleMic}
-          disabled={!speechOk}
-          title={
-            speechOk
-              ? listening
-                ? "Stop listening"
-                : "Speak"
-              : "Speech recognition not supported in this browser"
-          }
+          disabled={!micOk || busy}
+          title={micOk ? (recording ? "Stop and transcribe" : "Speak (PC mic)") : "Microphone not available"}
           aria-label="Microphone"
         >
           <MicIcon />
@@ -79,7 +83,7 @@ export function Composer({ onSend, disabled }: ComposerProps) {
         <textarea
           ref={textareaRef}
           className="composer-input"
-          placeholder={listening ? "Listening…" : "Message the Edge AI Assistant…"}
+          placeholder={placeholder}
           value={value}
           rows={1}
           onChange={(e) => setValue(e.target.value)}
@@ -97,7 +101,7 @@ export function Composer({ onSend, disabled }: ComposerProps) {
       </div>
       <p className="composer-hint">
         Enter to send · Shift+Enter for a new line
-        {speechOk ? " · tap the mic to dictate" : ""}
+        {micOk ? " · tap the mic to speak with your PC microphone" : ""}
       </p>
     </div>
   );

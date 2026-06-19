@@ -79,10 +79,8 @@ export function ControlPanel() {
 
       {err && <div className="cp-banner">Bridge API unreachable</div>}
 
-      {}
       <DeviceTwin />
 
-      {}
       <div className="cp-card">
         <div className="cp-stat">
           <span className={`cp-dot ${status?.board_connected ? "on" : "off"}`} />
@@ -108,7 +106,6 @@ export function ControlPanel() {
         </div>
       </div>
 
-      {}
       <h3 className="cp-label">AI backend</h3>
       <div className="cp-seg">
         <button
@@ -131,7 +128,16 @@ export function ControlPanel() {
         </button>
       </div>
 
-      {}
+      <h3 className="cp-label">Wireless (wifiTick)</h3>
+      <div className="cp-wifi">
+        <WifiIcon connected={false} />
+        <div className="cp-wifi-info">
+          <span className="cp-wifi-title">Board to cloud direct</span>
+          <span className="cp-wifi-sub">ESP8266 calls Groq over WiFi, no PC</span>
+        </div>
+        <span className="cp-wifi-badge">ready</span>
+      </div>
+
       <h3 className="cp-label">Board mood</h3>
       <div className="cp-grid">
         {moods.map((m) => (
@@ -150,7 +156,6 @@ export function ControlPanel() {
         ))}
       </div>
 
-      {}
       <h3 className="cp-label">Board state</h3>
       <div className="cp-grid four">
         {states.map((s) => (
@@ -168,7 +173,6 @@ export function ControlPanel() {
         ))}
       </div>
 
-      {}
       <h3 className="cp-label">LCD text</h3>
       <div className="cp-text">
         <input
@@ -184,7 +188,6 @@ export function ControlPanel() {
         </button>
       </div>
 
-      {}
       <h3 className="cp-label">LED color</h3>
       <div className="cp-grid">
         {LED_PRESETS.map((p) => (
@@ -213,5 +216,16 @@ export function ControlPanel() {
         transcription.
       </div>
     </aside>
+  );
+}
+
+function WifiIcon({ connected }: { connected: boolean }) {
+  const c = connected ? "#27c093" : "#6b7280";
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12.55a11 11 0 0 1 14 0" />
+      <path d="M8.5 16.05a6 6 0 0 1 7 0" />
+      <line x1="12" y1="20" x2="12.01" y2="20" />
+    </svg>
   );
 }
