@@ -19,3 +19,6 @@ bridge/.env
 # OS
 .DS_Store
 frontend/tsconfig.tsbuildinfo
+
+bridge/last_capture.wav
+bridge/voice_debug.log
