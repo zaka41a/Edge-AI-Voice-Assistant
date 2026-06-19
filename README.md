@@ -198,6 +198,6 @@ byte-exact and covered by tests (`bridge/tests/test_protocol.py`).
 
 ## Authors
 
-**Saad Fihi** and **Zakaria Sabiri**, Mikrocontrollertechnik, FH Aachen, Campus Julich.
+**Saad Fihi** and **Zakaria Sabiri**, Mikrocontrollertechnik,FH Aachen, Campus Julich.
 
 Built on the YAHAL hardware abstraction library.
