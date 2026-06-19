@@ -24,6 +24,8 @@ namespace {
     constexpr int16_t  MOUTH_AMP = 13;
 }
 
+static UG_COLOR dimc(UG_COLOR c, int num, int den);
+
 Face::Face(uGUI &gui) : _gui(gui) {}
 
 uint32_t Face::_moodColor() const {
@@ -102,26 +104,49 @@ void Face::_drawHead() {
 
     _gui.FillRoundFrame(HEAD_X1, HEAD_Y1, HEAD_X2, HEAD_Y2, 12, PANEL);
     _gui.DrawRoundFrame(HEAD_X1, HEAD_Y1, HEAD_X2, HEAD_Y2, 12, col);
+    _gui.DrawRoundFrame(HEAD_X1 + 1, HEAD_Y1 + 1, HEAD_X2 - 1, HEAD_Y2 - 1, 11,
+                        dimc(col, 1, 2));
 }
 
-void Face::_clearFaceArea() {
-
-    _gui.FillFrame(HEAD_X1 + 2, HEAD_Y1 + 2, HEAD_X2 - 2, HEAD_Y2 - 2, PANEL);
+static UG_COLOR dimc(UG_COLOR c, int num, int den) {
+    return ((((c >> 16) & 0xFF) * num / den) << 16) |
+           ((((c >>  8) & 0xFF) * num / den) <<  8) |
+            (((c & 0xFF) * num / den));
 }
 
-static void drawEye(uGUI &gui, int16_t cx, int16_t cy,
-                    int16_t dx, int16_t dy, UG_COLOR iris, bool blink) {
+static void drawEye(uGUI &gui, int16_t cx, int16_t cy, int16_t dx, int16_t dy,
+                    UG_COLOR iris, int topLid, int botLid, bool blink) {
     if (blink) {
-        gui.FillFrame(cx - SCLERA_R, cy - 2, cx + SCLERA_R, cy + 2, C_GRAY);
+        for (int16_t x = -SCLERA_R + 3; x <= SCLERA_R - 3; ++x) {
+            int16_t yy = cy + (x * x) / 46;
+            gui.DrawLine(cx + x, yy, cx + x, yy + 2, 0x9aa3b2);
+        }
         return;
     }
     gui.FillCircle(cx, cy, SCLERA_R, C_WHITE);
-    gui.FillCircle(cx + dx, cy + dy, 8, iris);
-    gui.FillCircle(cx + dx, cy + dy, 4, C_BLACK);
-    gui.DrawPixel (cx + dx - 2, cy + dy - 2, C_WHITE);
+    gui.DrawCircle(cx, cy, SCLERA_R, 0xC8D0DC);
+
+    const int16_t ix = cx + dx, iy = cy + dy;
+    gui.FillCircle(ix, iy, 10, iris);
+    gui.FillCircle(ix, iy, 6, 0x0E1116);
+    gui.FillCircle(ix - 3, iy - 4, 3, C_WHITE);
+    gui.DrawPixel(ix + 3, iy + 3, 0xC8D0DC);
+
+    if (topLid > 0)
+        gui.FillRoundFrame(cx - SCLERA_R, cy - SCLERA_R,
+                           cx + SCLERA_R, cy - SCLERA_R + topLid + 5, 6, PANEL);
+    if (botLid > 0)
+        gui.FillRoundFrame(cx - SCLERA_R, cy + SCLERA_R - botLid - 5,
+                           cx + SCLERA_R, cy + SCLERA_R, 6, PANEL);
 }
 
-void Face::_drawEyes() {
+static void drawBrow(uGUI &gui, int16_t innerX, int16_t innerY,
+                     int16_t outerX, int16_t outerY, UG_COLOR col) {
+    for (int t = 0; t < 4; ++t)
+        gui.DrawLine(innerX, innerY + t, outerX, outerY + t, col);
+}
+
+void Face::_drawEyes(bool force) {
     const UG_COLOR col = _moodColor();
 
     int16_t dx = 0, dy = 0;
@@ -136,42 +161,76 @@ void Face::_drawEyes() {
         int i = (_frame / 2) % 8;
         dx = ox[i]; dy = oy[i];
     } else if (_state == IDLE) {
-        blink = (_frame % 28) < 2;
+        blink = (_frame % 36) < 2;
     }
 
-    if (_mood == SAD)     dy += 3;
-    if (_mood == CURIOUS) dy -= 2;
+    int topL = 2, botL = 0;
+    if (_mood == HAPPY)   { botL = 9; dy -= 1; }
+    if (_mood == SAD)     { topL = 9; dy += 3; }
+    if (_mood == ANGRY)   { topL = 7; }
+    if (_mood == CURIOUS) { topL = 0; dy -= 2; }
 
-    drawEye(_gui, L_EYE_X, EYE_Y, dx, dy, col, blink);
-    drawEye(_gui, R_EYE_X, EYE_Y, dx, dy, col, blink);
+    if (!force && dx == _lastDx && dy == _lastDy && blink == _lastBlink) return;
+    _lastDx = dx; _lastDy = dy; _lastBlink = blink;
+
+    _gui.FillFrame(HEAD_X1 + 13, EYE_Y - SCLERA_R - 13,
+                   HEAD_X2 - 13, EYE_Y + SCLERA_R + 2, PANEL);
+
+    drawEye(_gui, L_EYE_X, EYE_Y, dx, dy, col, topL, botL, blink);
+    drawEye(_gui, R_EYE_X, EYE_Y, dx, dy, col, topL, botL, blink);
 
     if (blink) return;
 
-    const int16_t by = EYE_Y - SCLERA_R - 5;
-    if (_mood == ANGRY) {
-        _gui.DrawLine(L_EYE_X - 14, by, L_EYE_X + 8, by + 7, col);
-        _gui.DrawLine(R_EYE_X + 14, by, R_EYE_X - 8, by + 7, col);
-    } else if (_mood == SAD) {
-        _gui.DrawLine(L_EYE_X - 14, by + 7, L_EYE_X + 8, by, col);
-        _gui.DrawLine(R_EYE_X + 14, by + 7, R_EYE_X - 8, by, col);
-    } else if (_mood == CURIOUS) {
-        _gui.DrawLine(L_EYE_X - 12, by + 2, L_EYE_X + 10, by + 2, col);
-        _gui.DrawLine(R_EYE_X - 10, by - 4, R_EYE_X + 12, by - 4, col);
+    const int16_t by = EYE_Y - SCLERA_R - 7;
+    const int16_t in = 11, out = 16;
+    switch (_mood) {
+        case ANGRY:
+            drawBrow(_gui, L_EYE_X + in, by + 6, L_EYE_X - out, by - 1, col);
+            drawBrow(_gui, R_EYE_X - in, by + 6, R_EYE_X + out, by - 1, col);
+            break;
+        case SAD:
+            drawBrow(_gui, L_EYE_X + in, by - 3, L_EYE_X - out, by + 5, col);
+            drawBrow(_gui, R_EYE_X - in, by - 3, R_EYE_X + out, by + 5, col);
+            break;
+        case HAPPY:
+            drawBrow(_gui, L_EYE_X + in, by - 1, L_EYE_X - out, by + 1, col);
+            drawBrow(_gui, R_EYE_X - in, by - 1, R_EYE_X + out, by + 1, col);
+            break;
+        case CURIOUS:
+            drawBrow(_gui, L_EYE_X + in, by + 2, L_EYE_X - out, by + 2, col);
+            drawBrow(_gui, R_EYE_X - in, by - 5, R_EYE_X + out, by - 5, col);
+            break;
+        default:
+            drawBrow(_gui, L_EYE_X + in, by + 1, L_EYE_X - out, by, col);
+            drawBrow(_gui, R_EYE_X - in, by + 1, R_EYE_X + out, by, col);
+            break;
     }
 }
 
-void Face::_drawMouth() {
+static void drawCurve(uGUI &gui, int16_t cx, int16_t cy, int16_t w, int amp,
+                      bool down, UG_COLOR col, int thick) {
+    for (int16_t x = -w; x <= w; ++x) {
+        int t100 = (x * 100) / w;
+        int yoff = (amp * (10000 - t100 * t100)) / 10000;
+        int16_t py = down ? (cy + yoff) : (cy - yoff);
+        for (int t = 0; t < thick; ++t) gui.DrawPixel(cx + x, py + t, col);
+    }
+}
+
+void Face::_drawMouth(bool force) {
+    const bool animated = (_state == SPEAKING || _state == THINKING);
+    if (!force && !animated) return;
+    _gui.FillFrame(HEAD_X1 + 13, MOUTH_Y - 18, HEAD_X2 - 13, MOUTH_Y + 19, PANEL);
+
     const UG_COLOR col = _moodColor();
 
     if (_state == SPEAKING) {
         static const int8_t open[6] = { 3, 7, 11, 7, 3, 2 };
         int h = open[_frame % 6];
-        _gui.FillRoundFrame(MOUTH_X - 14, MOUTH_Y - h,
-                            MOUTH_X + 14, MOUTH_Y + h,
-                            (h < 10 ? h : 10), col);
-        _gui.FillRoundFrame(MOUTH_X - 14 + 3, MOUTH_Y - h + 2,
-                            MOUTH_X + 14 - 3, MOUTH_Y + h - 2,
-                            (h < 8 ? h : 8), 0x300000);
+        _gui.FillRoundFrame(MOUTH_X - 15, MOUTH_Y - h, MOUTH_X + 15, MOUTH_Y + h,
+                            (h < 11 ? h : 11), col);
+        _gui.FillRoundFrame(MOUTH_X - 12, MOUTH_Y - h + 2, MOUTH_X + 12, MOUTH_Y + h - 2,
+                            (h < 8 ? h : 8), 0x2A0E16);
         return;
     }
 
@@ -180,32 +239,28 @@ void Face::_drawMouth() {
         for (int k = 0; k < 3; ++k) {
             int16_t x = MOUTH_X - 18 + k * 18;
             _gui.FillCircle(x, MOUTH_Y, (k == active) ? 5 : 3,
-                            (k == active) ? col : C_GRAY);
+                            (k == active) ? col : dimc(col, 1, 3));
         }
         return;
     }
 
     if (_mood == CURIOUS) {
-        _gui.FillCircle(MOUTH_X, MOUTH_Y, 7, col);
-        _gui.FillCircle(MOUTH_X, MOUTH_Y, 4, PANEL);
+        _gui.FillCircle(MOUTH_X, MOUTH_Y, 8, col);
+        _gui.FillCircle(MOUTH_X, MOUTH_Y, 5, 0x2A0E16);
         return;
     }
 
     if (_mood == NEUTRAL) {
-        _gui.FillFrame(MOUTH_X - MOUTH_W, MOUTH_Y - 1,
-                       MOUTH_X + MOUTH_W, MOUTH_Y + 1, col);
+        _gui.FillRoundFrame(MOUTH_X - 16, MOUTH_Y - 2, MOUTH_X + 16, MOUTH_Y + 2, 2, col);
         return;
     }
 
-    const bool smile = (_mood == HAPPY);
-    const int16_t amp = (_mood == ANGRY) ? 8 : MOUTH_AMP;
-    for (int16_t x = -MOUTH_W; x <= MOUTH_W; ++x) {
-        int t100 = (x * 100) / MOUTH_W;
-        int yoff = (amp * (10000 - t100 * t100)) / 10000;
-        int16_t py = smile ? (MOUTH_Y + yoff) : (MOUTH_Y - yoff);
-        _gui.DrawPixel(MOUTH_X + x, py,     col);
-        _gui.DrawPixel(MOUTH_X + x, py + 1, col);
+    if (_mood == HAPPY) {
+        drawCurve(_gui, MOUTH_X, MOUTH_Y - 4, MOUTH_W, 16, true, col, 4);
+        return;
     }
+    const int amp = (_mood == ANGRY) ? 10 : 14;
+    drawCurve(_gui, MOUTH_X, MOUTH_Y + 4, MOUTH_W, amp, false, col, 4);
 }
 
 void Face::_drawStatus() {
@@ -315,16 +370,16 @@ void Face::tick() {
         if (leavingText) _gui.FillScreen(0x000000);
     }
 
+    bool force = false;
     if (_redrawStatic) {
         if (_showText) _drawTextScreen();
-        else { _drawHead(); _drawStatus(); }
+        else { _drawHead(); _drawStatus(); force = true; }
         _redrawStatic = false;
     }
 
     if (!_showText) {
-        _clearFaceArea();
-        _drawEyes();
-        _drawMouth();
+        _drawEyes(force);
+        _drawMouth(force);
     }
     ++_frame;
 }

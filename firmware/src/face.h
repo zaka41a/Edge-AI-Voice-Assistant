@@ -56,10 +56,12 @@ private:
     uint32_t _moodColor() const;
     const char *_stateLabel() const;
 
+    int16_t _lastDx = 999, _lastDy = 999;
+    bool    _lastBlink = false;
+
     void _drawHead();
-    void _clearFaceArea();
-    void _drawEyes();
-    void _drawMouth();
+    void _drawEyes(bool force);
+    void _drawMouth(bool force);
     void _drawStatus();
     void _drawTextScreen();
 };
