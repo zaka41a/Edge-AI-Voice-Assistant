@@ -11,7 +11,7 @@ try:
 except ImportError:
     pass
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -234,6 +234,14 @@ def chat(inp: ChatIn) -> ChatOut:
     _board.set_state("thinking")
     out = _run_pipeline(inp.message, mode="")
     return ChatOut(**out)
+
+
+@app.post("/transcribe")
+async def transcribe(request: Request, rate: int = 16000) -> dict:
+    if _stt is None:
+        return {"text": "", "error": "stt unavailable"}
+    pcm = await request.body()
+    return {"text": _stt.transcribe_pcm(pcm, rate)}
 
 @app.get("/history")
 def history(n: int = 20) -> list[dict]:
